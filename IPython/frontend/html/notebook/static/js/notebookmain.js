@@ -32,7 +32,6 @@ $(document).ready(function () {
     IPython.toolbar = new IPython.ToolBar('#toolbar')
     IPython.tooltip = new IPython.Tooltip()
     IPython.notification_widget = new IPython.NotificationWidget('#notification')
-    IPython.json_handlers = new IPython.JSONHandlers();
 
     IPython.layout_manager.do_resize();
 
