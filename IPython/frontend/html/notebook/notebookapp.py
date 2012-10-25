@@ -357,6 +357,9 @@ class NotebookApp(BaseIPythonApplication):
         help="""The hostname for the websocket server."""
     )
 
+    # A JS plugin is any .js file in static/jsplugins. We glob for these and load them into
+    # the notebook.html page. This allows any user to drop .js files into this directory.
+    # The main usage case for this is in declaring JSON handlers.
     javascript_plugins = List(Unicode)
 
     mathjax_url = Unicode("", config=True,
