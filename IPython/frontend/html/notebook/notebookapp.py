@@ -471,9 +471,12 @@ class NotebookApp(BaseIPythonApplication):
         """Initialize any JavaScript plugins.
 
         An JavaScript plugin is any js/css code found in the static/jsplugins directory.
-        This uses os.talk to find all .js and .css files in that directory and adds
+        This uses os.walk to find all .js and .css files in that directory and adds
         those files to the notebook.html template. This allows users to add their
         own custom js/css files that extend the capabilities of the Notebook.
+        
+        Files are included in alphanumeric order of their full path, which may be used 
+        to ensure that javascript dependencies are met.
 
         These js files can call IPython.json_handlers.register_handler to register
         a JSON handler for a particular type of JSON message.
@@ -482,7 +485,11 @@ class NotebookApp(BaseIPythonApplication):
         js = []
         for path in self.static_file_path:
             path = os.path.join(path,'jsplugins')
-            for root, dirs, files in os.walk(path):
+            
+            plugin_files = list(os.walk(path))
+            plugin_files.sort()
+            
+            for root, dirs, files in plugin_files:
                 for f in files:
                     ext = os.path.splitext(f)[1]
                     if ext == '.js':
