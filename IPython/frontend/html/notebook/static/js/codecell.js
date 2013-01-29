@@ -92,6 +92,7 @@ var IPython = (function (IPython) {
     CodeCell.cm_default = {
             mode: 'python',
             theme: 'ipython',
+            keyMap: 'vim',
             matchBrackets: true
     };
 
