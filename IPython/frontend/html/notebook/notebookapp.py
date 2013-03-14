@@ -18,6 +18,7 @@ Authors:
 
 # stdlib
 import errno
+import glob
 import logging
 import os
 import random
@@ -356,6 +357,12 @@ class NotebookApp(BaseIPythonApplication):
         help="""The hostname for the websocket server."""
     )
 
+    # These are used to track the .js and .css files found in static/jsplugins.
+    # See init_javascript_plugins below.    
+    extra_javascript = List(Unicode)
+    extra_css = List(Unicode)
+
+
     mathjax_url = Unicode("", config=True,
         help="""The url for MathJax.js."""
     )
@@ -423,7 +430,48 @@ class NotebookApp(BaseIPythonApplication):
         # self.log is a child of. The logging module dipatches log messages to a log
         # and all of its ancenstors until propagate is set to False.
         self.log.propagate = False
-    
+
+    def _build_static_path(self, root, file):
+        d = root.split('static')[-1]
+        d = d.lstrip(os.path.sep)
+        return os.path.join(d, file)
+
+    def init_javascript_plugins(self):
+        """Initialize any JavaScript plugins.
+
+        An JavaScript plugin is any js/css code found in the static/jsplugins directory.
+        This uses os.walk to find all .js and .css files in that directory and adds
+        those files to the notebook.html template. This allows users to add their
+        own custom js/css files that extend the capabilities of the Notebook.
+        
+        Files are included in alphanumeric order of their full path, which may be used 
+        to ensure that javascript dependencies are met.
+
+        These js files can call IPython.json_handlers.register_handler to register
+        a JSON handler for a particular type of JSON message.
+        """
+        css = []
+        js = []
+        for path in self.static_file_path:
+            path = os.path.join(path,'jsplugins')
+            
+            plugin_files = list(os.walk(path))
+            plugin_files.sort()
+            
+            for root, dirs, files in plugin_files:
+                for f in files:
+                    ext = os.path.splitext(f)[1]
+                    if ext == '.js':
+                        js_file = self._build_static_path(root, f)
+                        self.log.debug("Loading .js file: %s" % js_file)
+                        js.append(js_file)
+                    elif ext == '.css':
+                        css_file = self._build_static_path(root, f)
+                        self.log.debug("Loading .css file: %s" % css_file)
+                        css.append(css_file)
+        self.extra_javascript = js
+        self.extra_css = css
+
     def init_webapp(self):
         """initialize tornado webapp and httpserver"""
         self.web_app = NotebookWebApplication(
@@ -532,6 +580,7 @@ class NotebookApp(BaseIPythonApplication):
         self.init_logging()
         super(NotebookApp, self).initialize(argv)
         self.init_configurables()
+        self.init_javascript_plugins()
         self.init_webapp()
         self.init_signal()
 
